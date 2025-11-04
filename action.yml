@@ -1,5 +1,5 @@
-name: 'Build Image with Nixpacks and Push to Registry'
-description: 'Build a docker container with nixpacks on GitHub CI and push to a registry'
+name: 'Build Image with RailPack and Push to Registry'
+description: 'Build a docker container with RailPack on GitHub CI and push to a registry'
 author: 'Michael Bianco'
 branding:
   icon: 'box'
@@ -19,12 +19,6 @@ inputs:
     description: "Build's context is the set of files located in the specified PATH"
     required: true
     default: "."
-  pkgs:
-    description: "Provide additional nix packages to install in the environment"
-    required: false
-  apt:
-    description: "Provide additional apt packages to install in the environment"
-    required: false
   env:
     description: "Provide additional environment variables to set"
     required: false
@@ -61,8 +55,6 @@ runs:
         INPUT_LABELS: ${{ inputs.labels }}
         INPUT_PLATFORMS: ${{ inputs.platforms }}
         INPUT_CONTEXT: ${{ inputs.context }}
-        INPUT_PKGS: ${{ inputs.pkgs }}
-        INPUT_APT: ${{ inputs.apt }}
         INPUT_PUSH: ${{ inputs.push }}
         INPUT_ENV: ${{ inputs.env }}
         INPUT_CACHE: ${{ inputs.cache }}

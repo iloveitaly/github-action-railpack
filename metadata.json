@@ -1,5 +1,5 @@
 {
-  "description": "Build and push images with nixpacks",
-  "homepage": "https://github.com/iloveitaly/github-action-nixpacks",
-  "keywords": ["nixpacks", "docker"]
+  "description": "Build and push images with RailPack",
+  "homepage": "https://github.com/iloveitaly/github-action-railpack",
+  "keywords": ["railpack", "docker", "railway"]
 }

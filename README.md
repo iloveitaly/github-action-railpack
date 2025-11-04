@@ -1,6 +1,6 @@
-# Nixpacks Build and Push Action
+# RailPack Build and Push Action
 
-This GitHub Action utilizes [Nixpacks](https://nixpacks.com) to build a Docker image for your application and (optionally) push the image to a Docker registry. Nixpacks generates an OCI-compliant container image from your application source without the need for a Dockerfile.
+This GitHub Action utilizes [RailPack](https://railpack.com) to build a Docker image for your application and (optionally) push the image to a Docker registry. RailPack generates an OCI-compliant container image from your application source without the need for a Dockerfile.
 
 It's very opinionated out the box (as software should be!) but allows you to customize much of the functionality if you want.
 
@@ -9,7 +9,7 @@ It's very opinionated out the box (as software should be!) but allows you to cus
 - **Multi-architecture builds**: this is explained more in detail below.
 - **Default tags**: a unix timestamp, sha, and `latest` tag are automatically generated for each build.
 - **Default labels**: revision, author, build date, github repo, etc are all added automatically.
-- **Nixpacks options**: you add pass most (all?) nixpacks cli arguments to the action to customize your build as you would locally.
+- **RailPack options**: you can pass environment variables and other options to customize your build.
 
 ## Inputs
 
@@ -17,25 +17,22 @@ It's very opinionated out the box (as software should be!) but allows you to cus
 - `tags`: A comma-separated list of tags to apply to the built image. Defaults to unix timestamp, git SHA, and `latest`.
 - `labels`: An optional, comma-separated list of metadata labels to add to the image.
 - `platforms`: An optional, comma-separated list of target platforms for the build.
-- `pkgs`: Optional additional Nix packages to install in the environment.
-- `apt`: Optional additional Apt packages to install in the environment.
 - `push`: A boolean flag to indicate whether to push the built image to the registry. Default is `false`. Required for multi-architecture builds.
-- `cache`: A boolean flag to indicate whether to use the build cache. 
+- `cache`: A boolean flag to indicate whether to use the build cache.
   Cache speeds up the CI by reusing docker layers from previous builds.
   Default is `false`.
   (NOTE: The cache is shared between all builds in the repository. Some cache metadata will be inlined in the final image.)
-  See the [Nixpacks documentation](https://nixpacks.com/docs/configuration/caching) for more information.
 - `cache_tag`: A single tag to use for the cache image. Required if `cache` is `true`.
   Defaults to `ghcr.io/org/app:latest` where `org/app` is the repository the workflow runs into.
 - `env`: Optional environment variables to set during the build.
 
 ## Usage
 
-[Here's an example of this workflow in a live project:](https://github.com/iloveitaly/github-overlord/blob/master/.github/workflows/build_and_publish.yml)
+Basic usage:
 
 ```yaml
   - name: Build and push Docker images
-    uses: iloveitaly/github-action-nixpacks@main
+    uses: iloveitaly/github-action-railpack@main
     with:
       push: true
 ```
@@ -44,7 +41,7 @@ Multi-architecture builds are easy:
 
 ```yaml
 - name: Build and push Docker images
-  uses: iloveitaly/github-action-nixpacks@main
+  uses: iloveitaly/github-action-railpack@main
   with:
     platforms: "linux/amd64,linux/arm64"
     push: true
@@ -85,7 +82,7 @@ jobs:
         run: echo "DATE_STAMP=$(date +%s)" > "$GITHUB_ENV"
 
       - name: Build and push Docker images
-        uses: iloveitaly/github-action-nixpacks@main
+        uses: iloveitaly/github-action-railpack@main
         with:
           push: true
           tags: |
@@ -95,12 +92,20 @@ jobs:
 
 ### Multi-architecture builds
 
-These are tricky and not supported by nixpacks by default. This action makes it easy to create multi-architecture builds with nixpacks.
-
-<!-- TODO add blog post when complete -->
+Multi-architecture builds are fully supported via docker buildx. This action makes it easy to create multi-architecture builds with RailPack.
 
 Some things to keep in mind:
 
 * `push` is required when building for multiple architectures.
-* For each platform, an auto-generated tag is generated and pushed.
+* RailPack automatically detects your project type and builds accordingly.
 * There are some [TODOs](/TODO) that I won't get to until I need them.
+
+## About RailPack
+
+RailPack is Railway's zero-config application builder that automatically analyzes your code and turns it into an image. It's the successor to Nixpacks and supports:
+
+- Node, Python, Go, PHP, Java, Ruby, Deno, Rust, Elixir, Gleam, and more
+- First-class support for popular frontend frameworks like Vite, Astro, and Create React App
+- Automatic detection of build requirements and dependencies
+
+Learn more at [railpack.com](https://railpack.com)
