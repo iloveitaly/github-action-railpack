@@ -104,8 +104,8 @@ fi
 
 # Run railpack prepare to generate the build plan
 echo "Running railpack prepare..."
-# Only stdout goes to the plan file, stderr stays on console for debugging
-railpack prepare "${PREPARE_ARGS[@]}" "$INPUT_CONTEXT" > "$RAILPACK_PLAN_FILE"
+# Use --plan-out to save the JSON plan to a file
+railpack prepare "${PREPARE_ARGS[@]}" --plan-out "$RAILPACK_PLAN_FILE" "$INPUT_CONTEXT"
 
 # Verify the plan file is valid JSON
 if ! jq empty "$RAILPACK_PLAN_FILE" 2>/dev/null; then

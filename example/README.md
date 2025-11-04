@@ -1,17 +1,16 @@
-# Example RailPack Project
+# Example RailPack Shell Script Project
 
-This is a simple example project that demonstrates how to use the RailPack GitHub Action.
+This is a simple shell script example project that demonstrates how to use the RailPack GitHub Action.
 
 ## Files
 
-- `index.js` - A simple Node.js application that prints "Hello World"
-- `package.json` - Node.js project configuration
+- `start.sh` - A simple bash script that prints "Hello World" (RailPack auto-detects this)
 - `Procfile` - Tells RailPack how to run the application
-- `main.sh` - Alternative bash script (not used by default)
+- `main.sh` - Alternative example script
 
 ## How it works
 
-The GitHub workflow in `.github/workflows/example.yml` builds this example project using the RailPack action defined in this repository. RailPack automatically detects this as a Node.js project and builds it accordingly.
+The GitHub workflow in `.github/workflows/example.yml` builds this example project using the RailPack action defined in this repository. RailPack automatically detects this as a shell script project because of the `start.sh` file.
 
 ## Testing locally
 
