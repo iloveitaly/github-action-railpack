@@ -84,6 +84,15 @@ if [ "${#PLATFORMS[@]}" -gt 1 ] && [ "$INPUT_PUSH" != "true" ]; then
   exit 1
 fi
 
+# Setup RailPack apt packages environment variable
+# By default, install apt packages at runtime (deploy) which is what most users expect
+if [ -n "${INPUT_APT}" ]; then
+  # Convert comma/newline separated list to space-separated
+  APT_PACKAGES=$(echo "$INPUT_APT" | tr ',\n' ' ')
+  export RAILPACK_DEPLOY_APT_PACKAGES="$APT_PACKAGES"
+  echo "Installing apt packages: $APT_PACKAGES"
+fi
+
 # Prepare environment variables to pass to railpack
 PREPARE_ARGS=()
 if [ -n "${INPUT_ENV}" ]; then

@@ -17,6 +17,7 @@ It's very opinionated out the box (as software should be!) but allows you to cus
 - `tags`: A comma-separated list of tags to apply to the built image. Defaults to unix timestamp, git SHA, and `latest`.
 - `labels`: An optional, comma-separated list of metadata labels to add to the image.
 - `platforms`: An optional, comma-separated list of target platforms for the build.
+- `apt`: Optional additional apt packages to install in the runtime environment (comma-separated list). These packages will be available when your application runs.
 - `push`: A boolean flag to indicate whether to push the built image to the registry. Default is `false`. Required for multi-architecture builds.
 - `cache`: A boolean flag to indicate whether to use the build cache.
   Cache speeds up the CI by reusing docker layers from previous builds.
@@ -44,6 +45,16 @@ Multi-architecture builds are easy:
   uses: iloveitaly/github-action-railpack@main
   with:
     platforms: "linux/amd64,linux/arm64"
+    push: true
+```
+
+Installing additional apt packages:
+
+```yaml
+- name: Build and push Docker images
+  uses: iloveitaly/github-action-railpack@main
+  with:
+    apt: "ffmpeg,imagemagick"
     push: true
 ```
 
@@ -109,3 +120,23 @@ RailPack is Railway's zero-config application builder that automatically analyze
 - Automatic detection of build requirements and dependencies
 
 Learn more at [railpack.com](https://railpack.com)
+
+## Advanced Configuration
+
+### APT Packages
+
+The `apt` input installs packages at runtime (in the final deployed container). If you need packages only during the build process, you can set the `RAILPACK_BUILD_APT_PACKAGES` environment variable directly in your workflow:
+
+```yaml
+- name: Build and push Docker images
+  uses: iloveitaly/github-action-railpack@main
+  env:
+    RAILPACK_BUILD_APT_PACKAGES: "build-essential"
+  with:
+    apt: "ffmpeg"  # Runtime packages
+    push: true
+```
+
+### Other RailPack Environment Variables
+
+RailPack supports additional customization through environment variables. You can set any `RAILPACK_*` prefixed environment variable in your workflow to customize the build behavior. See the [RailPack documentation](https://railpack.com) for all available options.
