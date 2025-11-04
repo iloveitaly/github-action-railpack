@@ -1,0 +1,12 @@
+{
+  "name": "railpack-example",
+  "version": "1.0.0",
+  "description": "Simple example for RailPack GitHub Action",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["railpack", "example"],
+  "author": "",
+  "license": "MIT"
+}
