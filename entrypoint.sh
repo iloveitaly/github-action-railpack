@@ -4,7 +4,7 @@ set -e
 
 if ! command -v railpack &>/dev/null; then
   echo "Installing RailPack..."
-  curl -sSL https://railpack.com/install.sh | sh
+  curl -sSL https://railpack.com/install.sh | bash
 fi
 
 repository_author() {
@@ -104,7 +104,18 @@ fi
 
 # Run railpack prepare to generate the build plan
 echo "Running railpack prepare..."
+# Only stdout goes to the plan file, stderr stays on console for debugging
 railpack prepare "${PREPARE_ARGS[@]}" "$INPUT_CONTEXT" > "$RAILPACK_PLAN_FILE"
+
+# Verify the plan file is valid JSON
+if ! jq empty "$RAILPACK_PLAN_FILE" 2>/dev/null; then
+  echo "Error: railpack prepare did not generate valid JSON"
+  echo "Plan file contents:"
+  cat "$RAILPACK_PLAN_FILE"
+  exit 1
+fi
+
+echo "RailPack plan generated successfully"
 
 # Build docker buildx command
 BUILD_CMD="docker buildx build"
