@@ -107,16 +107,6 @@ echo "Running railpack prepare..."
 # Use --plan-out to save the JSON plan to a file
 railpack prepare "${PREPARE_ARGS[@]}" --plan-out "$RAILPACK_PLAN_FILE" "$INPUT_CONTEXT"
 
-# Verify the plan file is valid JSON
-if ! jq empty "$RAILPACK_PLAN_FILE" 2>/dev/null; then
-  echo "Error: railpack prepare did not generate valid JSON"
-  echo "Plan file contents:"
-  cat "$RAILPACK_PLAN_FILE"
-  exit 1
-fi
-
-echo "RailPack plan generated successfully"
-
 # Build docker buildx command
 BUILD_CMD="docker buildx build"
 BUILD_CMD="$BUILD_CMD --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend"
