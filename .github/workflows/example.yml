@@ -1,0 +1,79 @@
+name: Build Example Project
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'example/**'
+      - 'action.yml'
+      - 'entrypoint.sh'
+      - '.github/workflows/example.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'example/**'
+      - 'action.yml'
+      - 'entrypoint.sh'
+      - '.github/workflows/example.yml'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push example with RailPack
+        uses: ./ # Use the action from this repository
+        with:
+          context: ./example
+          tags: |
+            ghcr.io/${{ github.repository }}/example:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/example:latest
+          push: true
+          cache: true
+
+      - name: Verify image was pushed to registry
+        if: success()
+        run: |
+          echo "Verifying images were pushed to GitHub Container Registry..."
+
+          # Inspect the SHA-tagged image
+          docker buildx imagetools inspect ghcr.io/${{ github.repository }}/example:${{ github.sha }}
+
+          # Inspect the latest tag
+          docker buildx imagetools inspect ghcr.io/${{ github.repository }}/example:latest
+
+          echo "✅ Both images verified in registry!"
+
+      - name: Pull and test the pushed image
+        if: success()
+        run: |
+          echo "Pulling and testing the pushed image..."
+
+          # Pull the image from registry
+          docker pull ghcr.io/${{ github.repository }}/example:latest
+
+          # Run the container for a few seconds to verify it works
+          docker run --rm --name railpack-test -d ghcr.io/${{ github.repository }}/example:latest
+
+          # Give it a moment to start
+          sleep 3
+
+          # Check logs
+          echo "Container logs:"
+          docker logs railpack-test
+
+          # Stop the container
+          docker stop railpack-test
+
+          echo "✅ Image runs successfully!"
