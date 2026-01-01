@@ -33,7 +33,7 @@ Basic usage:
 
 ```yaml
   - name: Build and push Docker images
-    uses: iloveitaly/github-action-railpack@main
+    uses: iloveitaly/github-action-railpack@master
     with:
       push: true
 ```
@@ -42,7 +42,7 @@ Multi-architecture builds are easy:
 
 ```yaml
 - name: Build and push Docker images
-  uses: iloveitaly/github-action-railpack@main
+  uses: iloveitaly/github-action-railpack@master
   with:
     platforms: "linux/amd64,linux/arm64"
     push: true
@@ -52,7 +52,7 @@ Installing additional apt packages:
 
 ```yaml
 - name: Build and push Docker images
-  uses: iloveitaly/github-action-railpack@main
+  uses: iloveitaly/github-action-railpack@master
   with:
     apt: "ffmpeg,imagemagick"
     push: true
@@ -93,7 +93,7 @@ jobs:
         run: echo "DATE_STAMP=$(date +%s)" > "$GITHUB_ENV"
 
       - name: Build and push Docker images
-        uses: iloveitaly/github-action-railpack@main
+        uses: iloveitaly/github-action-railpack@master
         with:
           push: true
           tags: |
@@ -129,7 +129,7 @@ The `apt` input installs packages at runtime (in the final deployed container). 
 
 ```yaml
 - name: Build and push Docker images
-  uses: iloveitaly/github-action-railpack@main
+  uses: iloveitaly/github-action-railpack@master
   env:
     RAILPACK_BUILD_APT_PACKAGES: "build-essential"
   with:
