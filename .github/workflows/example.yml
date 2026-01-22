@@ -32,13 +32,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push example with RailPack
+      - name: Build and push example with RailPack (Multi-Arch)
         uses: ./ # Use the action from this repository
         with:
           context: ./example
           tags: |
             ghcr.io/${{ github.repository }}/example:${{ github.sha }}
             ghcr.io/${{ github.repository }}/example:latest
+          platforms: linux/amd64,linux/arm64
           push: true
           cache: true
 
