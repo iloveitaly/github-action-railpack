@@ -43,9 +43,6 @@ repository_license() {
 GHCR_IMAGE_NAME="ghcr.io/$GITHUB_REPOSITORY"
 RAILPACK_PLAN_FILE="/tmp/railpack-plan.json"
 
-# Setup docker buildx
-docker buildx create --use --driver docker-container 2>/dev/null || docker buildx use default
-
 # Incorporate provided input parameters from actions.yml
 if [ -n "${INPUT_TAGS}" ]; then
   read -ra TAGS <<<"$(echo "$INPUT_TAGS" | tr ',\n' ' ')"
@@ -108,48 +105,85 @@ echo "Running railpack prepare..."
 railpack prepare "${PREPARE_ARGS[@]}" --plan-out "$RAILPACK_PLAN_FILE" "$INPUT_CONTEXT"
 
 # Build docker buildx command
-BUILD_CMD="docker buildx build"
-BUILD_CMD="$BUILD_CMD --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend"
-BUILD_CMD="$BUILD_CMD -f $RAILPACK_PLAN_FILE"
-
-# Add tags
-for tag in "${TAGS[@]}"; do
-  BUILD_CMD="$BUILD_CMD --tag $tag"
-done
+COMMON_ARGS="--build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend"
+COMMON_ARGS="$COMMON_ARGS -f $RAILPACK_PLAN_FILE"
 
 # Add labels
 for label in "${LABELS[@]}"; do
-  BUILD_CMD="$BUILD_CMD --label $label"
+  COMMON_ARGS="$COMMON_ARGS --label $label"
 done
-
-# Add platforms if specified
-if [ -n "${PLATFORMS[*]}" ]; then
-  PLATFORM_LIST=$(IFS=,; echo "${PLATFORMS[*]}")
-  BUILD_CMD="$BUILD_CMD --platform $PLATFORM_LIST"
-fi
 
 # Handle caching
 if [[ "$INPUT_CACHE" == "true" ]]; then
   if [ -z "$INPUT_CACHE_TAG" ]; then
     INPUT_CACHE_TAG=$(echo "$GHCR_IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
   fi
-  BUILD_CMD="$BUILD_CMD --cache-from type=registry,ref=$INPUT_CACHE_TAG"
-  BUILD_CMD="$BUILD_CMD --cache-to type=inline"
+  COMMON_ARGS="$COMMON_ARGS --cache-from type=registry,ref=$INPUT_CACHE_TAG"
+  COMMON_ARGS="$COMMON_ARGS --cache-to type=inline"
 fi
 
-# Handle push
-if [[ "$INPUT_PUSH" == "true" ]]; then
-  BUILD_CMD="$BUILD_CMD --push"
+if [ "${#PLATFORMS[@]}" -gt 1 ]; then
+  echo "Detected multi-platform build. Building for each platform sequentially..."
+  
+  # 1. Build and push platform-specific images
+  for plat in "${PLATFORMS[@]}"; do
+    echo "Building for platform: $plat"
+    SANITIZED_PLAT=$(echo "$plat" | tr '/' '-')
+    
+    PLAT_ARGS=""
+    for tag in "${TAGS[@]}"; do
+      PLAT_ARGS="$PLAT_ARGS --tag ${tag}-${SANITIZED_PLAT}"
+    done
+    
+    # Multi-platform builds via this method must be pushed
+    BUILD_CMD="docker buildx build $COMMON_ARGS --platform $plat $PLAT_ARGS --push $INPUT_CONTEXT"
+    echo "Running: $BUILD_CMD"
+    eval "$BUILD_CMD"
+  done
+  
+  # 2. Create manifest lists
+  echo "Merging platform images into manifest lists..."
+  for tag in "${TAGS[@]}"; do
+    SOURCES=""
+    for plat in "${PLATFORMS[@]}"; do
+      SANITIZED_PLAT=$(echo "$plat" | tr '/' '-')
+      SOURCES="$SOURCES ${tag}-${SANITIZED_PLAT}"
+    done
+    
+    MANIFEST_CMD="docker buildx imagetools create -t $tag $SOURCES"
+    echo "Running: $MANIFEST_CMD"
+    eval "$MANIFEST_CMD"
+  done
+
 else
-  BUILD_CMD="$BUILD_CMD --load"
+  # Single platform or no platform specified
+  BUILD_CMD="docker buildx build $COMMON_ARGS"
+
+  # Add tags
+  for tag in "${TAGS[@]}"; do
+    BUILD_CMD="$BUILD_CMD --tag $tag"
+  done
+
+  # Add platforms if specified
+  if [ -n "${PLATFORMS[*]}" ]; then
+    PLATFORM_LIST=$(IFS=,; echo "${PLATFORMS[*]}")
+    BUILD_CMD="$BUILD_CMD --platform $PLATFORM_LIST"
+  fi
+
+  # Handle push
+  if [[ "$INPUT_PUSH" == "true" ]]; then
+    BUILD_CMD="$BUILD_CMD --push"
+  else
+    BUILD_CMD="$BUILD_CMD --load"
+  fi
+
+  # Add context
+  BUILD_CMD="$BUILD_CMD $INPUT_CONTEXT"
+
+  echo "Executing RailPack build command via docker buildx:"
+  echo "$BUILD_CMD"
+
+  eval "$BUILD_CMD"
 fi
-
-# Add context
-BUILD_CMD="$BUILD_CMD $INPUT_CONTEXT"
-
-echo "Executing RailPack build command via docker buildx:"
-echo "$BUILD_CMD"
-
-eval "$BUILD_CMD"
 
 echo "RailPack Build & Push completed successfully."
