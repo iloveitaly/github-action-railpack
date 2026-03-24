@@ -23,7 +23,7 @@ inputs:
     description: "Provide additional apt packages to install in the environment (comma-separated list)"
     required: false
   env:
-    description: "Provide additional environment variables to set"
+    description: "Environment variables to pass to the railpack build (newline-separated KEY=VALUE pairs). Use the YAML multiline string syntax (env: |) to support values containing commas."
     required: false
   push:
     description: "Boolean to determine if the built image should be pushed"

@@ -97,10 +97,10 @@ fi
 # Prepare environment variables to pass to railpack
 PREPARE_ARGS=()
 if [ -n "${INPUT_ENV}" ]; then
-  IFS=',' read -ra ENVS <<<"$INPUT_ENV"
-  for env_var in "${ENVS[@]}"; do
+  while IFS= read -r env_var; do
+    [ -z "$env_var" ] && continue
     PREPARE_ARGS+=("--env" "$env_var")
-  done
+  done <<<"$INPUT_ENV"
 fi
 
 # Run railpack prepare to generate the build plan
