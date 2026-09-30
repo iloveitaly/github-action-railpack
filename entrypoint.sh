@@ -94,12 +94,14 @@ if [ -n "${INPUT_APT}" ]; then
   echo "Installing apt packages: $APT_PACKAGES"
 fi
 
-# Prepare environment variables to pass to railpack
+# Prepare environment variables to pass to railpack and buildx build
 PREPARE_ARGS=()
+ENV_VARS=()
 if [ -n "${INPUT_ENV}" ]; then
   while IFS= read -r env_var; do
     [ -z "$env_var" ] && continue
     PREPARE_ARGS+=("--env" "$env_var")
+    ENV_VARS+=("$env_var")
   done <<<"$INPUT_ENV"
 fi
 
@@ -111,6 +113,24 @@ railpack prepare "${PREPARE_ARGS[@]}" --plan-out "$RAILPACK_PLAN_FILE" "$INPUT_C
 # Build docker buildx command
 COMMON_ARGS="--build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend"
 COMMON_ARGS="$COMMON_ARGS -f $RAILPACK_PLAN_FILE"
+
+# Add secrets
+for env_var in "${ENV_VARS[@]}"; do
+  export "$env_var"
+done
+
+for env_var in "${ENV_VARS[@]}"; do
+  env_name="${env_var%%=*}"
+  COMMON_ARGS="$COMMON_ARGS --secret id=$env_name,env=$env_name"
+done
+
+# Add secrets hash
+SECRETS_HASH=$(
+  printf '%s' "$INPUT_ENV" |
+    sha256sum |
+    awk '{print $1}'
+)
+COMMON_ARGS="$COMMON_ARGS --build-arg secrets-hash=$SECRETS_HASH"
 
 # Add labels
 for label in "${LABELS[@]}"; do
