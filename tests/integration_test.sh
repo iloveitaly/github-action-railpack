@@ -27,6 +27,8 @@ export INPUT_CONTEXT="example"
 export GITHUB_REPOSITORY="railpack-test/app"
 export GITHUB_SHA="test-sha"
 export INPUT_CACHE="false"
+export INPUT_ENV="EXAMPLE_SECRET=secret
+EXAMPLE_URL=http://localhost:8080"
 
 # Create a dummy builder to isolate test
 BUILDER_NAME="railpack-test-builder"
